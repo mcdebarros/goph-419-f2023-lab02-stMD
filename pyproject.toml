@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "goph419lab02"
+version = "0.0.1"
+authors = [
+    { name = "Mauricio de Barros", email = "mauricio.debarros@ucalgary.ca" },
+]
+description = "GOPH 419 LAB 02"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["numpy", "matplotlib"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: GNU General Public License v3",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/mcdebarros/goph-419-f2023-lab02-stMD"
