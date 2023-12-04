@@ -28,10 +28,10 @@ def gauss_iter_solve(a,b,x0,tol=1e-8,alg=None):
     # make sure that the coef matrix is square
     m = len(a)
     ndim = len(a.shape)
-    if not x0:
-        x0 = (b/np.trace(a))
+    if all(x0) == all(np.zeros(np.shape(b))):
+        x0 = np.zeros(np.shape(b))
     else:
-        x0 = np.array(x0, dtype=float)
+        x0 = (b/np.trace(a))
     if ndim != 2:
         raise ValueError(f"A has {ndim} dimensions"
                          + ", should be 2")
@@ -47,16 +47,67 @@ def gauss_iter_solve(a,b,x0,tol=1e-8,alg=None):
     if len(b) != m:
         raise ValueError(f"A has {m} rows, b has {len(b)} values"
                          + ", dimensions incompatible")
-    if alg.lower().strip() not in ['seidel', 'jacobi']:
+    if alg not in ('seidel','jacobi'):
         raise ValueError("Unrecognized iteration algorithm, choose either 'seidel' or 'jacobi")
     #-------------------------------------------------------------------------------------
     # perform gauss-seidel based on selection
 
-    eps_a = np.ones(np.shape(x0)) * 100
-    xk = x0
+    eps_a = np.array(np.ones(np.shape(b))) * 100
+    xn = x0.copy()
+    dx = np.array(np.zeros(np.shape(b)))
+    count = 0
+    a_diag = np.zeros(np.shape(a))
+    ade = np.diag(a)
+    for i in range (0,np.size(a[0,:])):
+        a_diag[i,i] = ade[i]
+    a_star = np.matmul(np.linalg.inv(a_diag),a)
+    ass = a_star - np.identity(np.size(a[0,:]))
+    b_star = np.matmul(np.linalg.inv(a_diag),b)
 
-    while (any(eps_a) > tol):
-        if alg == 'seidel':
-            xn = 
-        else:
-            pass
+    if alg == 'jacobi': #jacobi
+        while any(eps_a > tol):
+            xo = xn.copy()
+            count += 1
+            print("Iteration: " + f"{count}")
+            for i in range(0,len(b)):
+                xn = b_star - (ass @ xo)
+                dx = xn - xo
+                eps_a = np.abs(dx/xo)
+    else:
+        while any(eps_a) > tol:
+            xo = xn.copy()
+            count += 1
+            print("Iteration: " + f"{count}")
+            for i in range (0,len(b)):
+                sig = np.dot(a_star[i,:i],xn[:i]) + np.dot(a_star[i,i+1:],xo[i+1:])
+                xn[i] = (b_star[i] - sig) / a_star[i,i]
+                dx[i] = xn[i] - xo[i]
+                eps_a[i] = np.abs(dx[i] / xo[i])
+    return xn
+
+def spline_function(xd,yd,order):
+    pass
+
+a = np.array([[9,1,0,0],
+              [0,12,7,0],
+              [0,0,8,8],
+              [0,0,0,7]])
+
+b = np.transpose(np.array([1,2,3,4]))
+x = np.transpose(np.array([[5,2,1,3]]))
+
+jaco = gauss_iter_solve(a,b,x,alg='jacobi')
+seid = gauss_iter_solve(a,b,x,alg='seidel')
+
+print(jaco)
+
+act = np.linalg.solve(a,b)
+
+print(seid)
+print(act)
+            
+
+                
+            
+            
+                
