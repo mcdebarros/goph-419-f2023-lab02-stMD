@@ -1,6 +1,6 @@
 import numpy as np
 
-def gauss_iter_solve(a,b,x0,tol=1e-8,alg=None):
+def gauss_iter_solve(a,b,x0=None,tol=1e-8,alg='seidel'):
 
     """Solve a linear system using Gauss-Seidel elimination.
 
@@ -28,10 +28,6 @@ def gauss_iter_solve(a,b,x0,tol=1e-8,alg=None):
     # make sure that the coef matrix is square
     m = len(a)
     ndim = len(a.shape)
-    if all(x0) == all(np.zeros(np.shape(b))):
-        x0 = np.zeros(np.shape(b))
-    else:
-        x0 = (b/np.trace(a))
     if ndim != 2:
         raise ValueError(f"A has {ndim} dimensions"
                          + ", should be 2")
@@ -47,64 +43,83 @@ def gauss_iter_solve(a,b,x0,tol=1e-8,alg=None):
     if len(b) != m:
         raise ValueError(f"A has {m} rows, b has {len(b)} values"
                          + ", dimensions incompatible")
-    if alg not in ('seidel','jacobi'):
-        raise ValueError("Unrecognized iteration algorithm, choose either 'seidel' or 'jacobi")
+    if not x0:
+        x = np.zeros_like(b)
+    else:
+        x = np.array(x0,dtype=float)
+        if x.shape != b.shape:
+            raise ValueError() #FIX THIS!!!
+    if alg.strip().lower() not in ('seidel','jacobi'):
+        raise ValueError("Unrecognized iteration algorithm, choose either 'seidel' or 'jacobi'")
     #-------------------------------------------------------------------------------------
     # perform gauss-seidel based on selection
 
-    eps_a = np.array(np.ones(np.shape(b))) * 100
-    xn = x0.copy()
-    dx = np.array(np.zeros(np.shape(b)))
+    eps_a = 2 * tol
     count = 0
-    a_diag = np.zeros(np.shape(a))
-    ade = np.diag(a)
-    for i in range (0,np.size(a[0,:])):
-        a_diag[i,i] = ade[i]
-    a_star = np.matmul(np.linalg.inv(a_diag),a)
-    ass = a_star - np.identity(np.size(a[0,:]))
-    b_star = np.matmul(np.linalg.inv(a_diag),b)
+    a_diag = np.diag(1.0/np.diag(a))
+    b_star = a_diag @ b
+    a_star = a_diag @ a
+    a_s = a_star - np.eye(m)
+    max_iter = 100
 
-    if alg == 'jacobi': #jacobi
-        while any(eps_a > tol):
-            xo = xn.copy()
+    if alg.strip().lower() == 'jacobi':
+        while eps_a > tol and count < max_iter:
+            xo = x.copy()
             count += 1
-            print("Iteration: " + f"{count}")
-            for i in range(0,len(b)):
-                xn = b_star - (ass @ xo)
-                dx = xn - xo
-                eps_a = np.abs(dx/xo)
+            x = b_star - a_s @ x
+            dx = x - xo
+            eps_a = np.linalg.norm(dx) / np.linalg.norm(x)
     else:
-        while any(eps_a) > tol:
-            xo = xn.copy()
+        while eps_a > tol and count < max_iter:
+            xo = x.copy()
             count += 1
-            print("Iteration: " + f"{count}")
-            for i in range (0,len(b)):
-                sig = np.dot(a_star[i,:i],xn[:i]) + np.dot(a_star[i,i+1:],xo[i+1:])
-                xn[i] = (b_star[i] - sig) / a_star[i,i]
-                dx[i] = xn[i] - xo[i]
-                eps_a[i] = np.abs(dx[i] / xo[i])
-    return xn
+            for i,a_row in enumerate(a_s):
+                x[i] = b_star[i] - np.dot(a_row,x)
+            dx = x - xo
+            eps_a = np.linalg.norm(dx) / np.linalg.norm(x)
 
-def spline_function(xd,yd,order):
-    pass
+    if count >= max_iter:
+        raise RuntimeWarning() #FIX THIS!!!
+    return x
 
-a = np.array([[9,1,0,0],
-              [0,12,7,0],
-              [0,0,8,8],
-              [0,0,0,7]])
+def spline_function(xd,yd,order=3):
 
-b = np.transpose(np.array([1,2,3,4]))
-x = np.transpose(np.array([[5,2,1,3]]))
+    #add to dcstring for unique values in xd
 
-jaco = gauss_iter_solve(a,b,x,alg='jacobi')
-seid = gauss_iter_solve(a,b,x,alg='seidel')
+    k_sort = np.argsort(xd)
+    xd = np.array([xd[k] for k in k_sort])
+    yd = np.array([yd[k] for k in k_sort])
 
-print(jaco)
+    if order not in (1,2,3):
+        raise ValueError(f"Chosen order of {order} not supported.")
+    
+    N = len(xd)
+    a = yd[:-1]
+    dx = np.diff(xd)
+    dy = np.diff(yd)
+    f1 = dy/dx
 
-act = np.linalg.solve(a,b)
+    if order == 1:
 
-print(seid)
-print(act)
+        b = f1
+        def s1(x):
+
+            k = (0 if x <=  xd[0]
+                 else len(a) - 1 if x >= xd[-1]
+                else np.nonzero(xd<x)[0][-1])
+            
+            return a[k] + b[k] * (x - xd[k])
+        
+        return s1
+    elif order == 2:
+        
+        A0 = np.hstack([np.diag(dx[:-1]),np.zeros((N-2,1))])
+        A1 = np.hstack([np.zeros((N-2,1)),np.diag(dx[:-1])])
+    else:
+        pass
+
+
+
             
 
                 
