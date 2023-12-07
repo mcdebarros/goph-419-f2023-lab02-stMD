@@ -15,7 +15,7 @@ def main():
 
     year_check = 2015.25
     print("Loading data...")
-    carbon = np.loadtxt("C:\\Users\\Mauricio\\REPOS\\GOPH419\\goph-419-f2023-lab02-stMD\\examples\\MKCO2.txt")
+    carbon = np.loadtxt(".\\examples\\MKCO2.txt")
     year = carbon[:,0]
     co2 = carbon[:,1]
     print("Loaded!")
@@ -63,20 +63,8 @@ def main():
     plt.ylabel("CO2 Concentration [micromol/mol]")
     plt.xlabel("Year")
     plt.legend()
+    plt.savefig(".\\figures\\co2_splines.png")
     plt.show()
-
-
-
-
-
-
-
-
-    
-    
-
-
-    
 
 if __name__ == "__main__":
     main()
