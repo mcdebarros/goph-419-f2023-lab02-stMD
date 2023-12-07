@@ -277,6 +277,127 @@ def spline_function(xd,yd,order=3):
         # Return third order function
 
         return s3
+    
+def build_sys(xd,yd):
+
+    N = len(xd) # Number of data points
+    dx = np.diff(xd) # Vector of xd differences
+    dy = np.diff(yd) # Vector of yd differences
+    f1 = dy/dx # First order difference
+
+    A = np.zeros((N,N)) # Initialize N by N 0 matrix
+    A[1:-1,:-2] += np.diag(dx[:-1]) # Add lower off-diagonal entries, exclude first and last rows
+    A[1:-1,1:-1] += np.diag(2 * (dx[:-1] + dx[1:])) # Add main diagonal entries, exclude first and last rows
+    A[1:-1,2:] += np.diag(dx[1:]) # Add upper off-diagonal entries, exclude first and last rows
+    A[0,:3] = [-dx[1],dx[0]+dx[1],-dx[0]] # Add first row entries
+    A[-1,-3:] = [-dx[-1],dx[-1]+dx[-2],-dx[-2]] # Add last row entries
+
+    # Design B vector
+
+    B = np.zeros((N,))
+    B[1:-1] = 3 * np.diff(f1)
+
+    return A,B
+
+def check_dom(A):
+
+    for i in range(len(A)):
+
+        on_d = abs(A[i,i])
+        off_d = 0
+        
+        for j in range(len(A)):
+
+            off_d += abs(A[i,j])
+
+        off_d -= on_d
+
+        if off_d > on_d:
+
+            return False
+
+    return True
+
+def norm_sys(A,B):
+
+    m = len(B)
+    a_diag = np.diag(1.0/np.diag(A))
+    b_star = a_diag @ B
+    a_star = a_diag @ A
+    a_s = a_star - np.eye(m)
+
+    return a_s,b_star
+
+def jacobi_only(a,b):
+
+    count = 0
+    tol = 1e-8
+    x = np.zeros(np.shape(b))
+    max_iter = 100
+    eps_a = 2 * tol
+
+    while eps_a > tol and count < max_iter:
+
+        xo = x.copy() # Copy new x as old x
+        count += 1 # Increase iteration counter
+        x = b - a @ x # Compute new x guess
+        dx = x - xo # Calculate difference between old and new guess
+        eps_a = np.linalg.norm(dx) / np.linalg.norm(x) # Relative error update
+
+    if count >= max_iter:
+
+        print(f"No convergence after {max_iter} iterations. Returning last guess.")
+
+    else:
+
+        print("System solved!")
+
+    return(x)
+
+def check_soln(x,xa):
+    
+    for i in range(len(xa)):
+        pe = (x[i] - xa[i]) / xa[i]
+        if pe >= 0.001:
+            return False
+    
+    return True
+
+def solve_spline_coefs(xd,yd,c):
+
+    a = yd[:-1] # Trimmed yd vector
+    dx = np.diff(xd) # Vector of xd differences
+    dy = np.diff(yd) # Vector of yd differences
+    f1 = dy/dx # First order difference
+    d = np.diff(c) / (3 * dx)
+    b = f1 - c[:-1] * dx - d * dx ** 2
+
+    return a,b,d
+
+def gen_spline_func(a,b,c,d,x,xd):
+
+    def spline_func(x):
+
+        # Assign spline location based on value in x
+
+        k = (0 if x <=  xd[0]
+                else len(a) - 1 if x >= xd[-1]
+            else np.nonzero(xd<x)[0][-1])
+        
+        # Return interpolated values at x
+        
+        return a[k] + b[k] * (x - xd[k]) + c[k] * (x - xd[k]) ** 2 + d[k] * (x - xd[k]) ** 3
+    
+    # Return third order function
+
+    return spline_func
+
+
+
+
+    
+
+
 
 
 
