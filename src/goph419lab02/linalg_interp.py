@@ -331,7 +331,7 @@ def norm_sys(A,B):
 def jacobi_only(a,b):
 
     count = 0
-    tol = 1e-8
+    tol = 0.5e-15
     x = np.zeros(np.shape(b))
     max_iter = 100
     eps_a = 2 * tol
