@@ -13,8 +13,8 @@ def main():
 
     # Load data from file
 
-    water = np.loadtxt("C:\\Users\\mcdeb\\GOPH419\\goph-419-f2023-lab02-stMD\\examples\\wdvt.txt")
-    air = np.loadtxt("C:\\Users\\mcdeb\\GOPH419\\goph-419-f2023-lab02-stMD\\examples\\advt.txt")
+    water = np.loadtxt("examples/wdvt.txt")
+    air = np.loadtxt("examples/advt.txt")
 
     # Retrieve spline functions for water data
 
@@ -71,7 +71,7 @@ def main():
     plt.plot(water[:,0],water[:,1],'xb',label="Data")
     plt.plot(T_water,rho_3_water,'--r',label="Cubic")
     plt.legend()
-    plt.ylabel("Density [kg/m^3]")
+    plt.ylabel("Density [g/cm^3]")
     plt.xlabel("Temperature [deg C]")
 
     # Subplots (2,4,6) plot air data and interpolated splines for orders (1,2,3)

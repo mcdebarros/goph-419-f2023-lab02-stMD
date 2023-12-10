@@ -68,7 +68,9 @@ def gauss_iter_solve(a,b,x0=None,tol=1e-8,alg='seidel'):
     
     # Check that alg is one of 'seidel' or 'jacobi'
 
-    if alg.strip().lower() not in ('seidel','jacobi'):
+    alg = alg.strip().lower()
+
+    if alg not in ('seidel','jacobi'):
         raise ValueError("Unrecognized iteration algorithm"
                          + ", choose either 'seidel' or 'jacobi'")
     
@@ -89,7 +91,7 @@ def gauss_iter_solve(a,b,x0=None,tol=1e-8,alg='seidel'):
 
     # Perform Gauss-Seidel iteration based on alg
 
-    if alg.strip().lower() == 'jacobi':
+    if alg == 'jacobi':
 
         # Perform Gauss-Seidel method until convergence or maximum iterations
 
@@ -184,7 +186,7 @@ def spline_function(xd,yd,order=3):
 
         def s1(x):
 
-            # Assign spline location based on value in x
+            # Assign interval location based on value in x
 
             k = (0 if x <=  xd[0]
                  else len(a) - 1 if x >= xd[-1]
@@ -199,9 +201,8 @@ def spline_function(xd,yd,order=3):
         return s1
     
     elif order == 2:
-
-        # Design second order coefficient matrix
         
+        # Design second order coefficient matrix
         A0 = np.hstack([np.diag(dx[:-1]),np.zeros((N-2,1))]) # Stack 0 vector to left edge of right-side lower portion
         A1 = np.hstack([np.zeros((N-2,1)),np.diag(dx[1:])]) # Stack 0 vector to right edge of left-side lower portion
         A = np.vstack([np.zeros((1,N-1)),(A0+A1)]) # Stack 0 row above combined A0 and A1 matrices
@@ -234,7 +235,7 @@ def spline_function(xd,yd,order=3):
     
     else:
 
-        # Design second order coefficient matrix
+        # Design third order coefficient matrix
         
         A = np.zeros((N,N)) # Initialize N by N 0 matrix
         A[1:-1,:-2] += np.diag(dx[:-1]) # Add lower off-diagonal entries, exclude first and last rows
